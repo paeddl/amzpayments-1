@@ -1,6 +1,6 @@
 <?php
 /**
- * 2013-2019 Amazon Advanced Payment APIs Modul
+ * 2013-2020 Amazon Advanced Payment APIs Modul
  *
  * for Support please visit www.patworx.de
  *

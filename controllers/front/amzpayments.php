@@ -248,7 +248,7 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                 if (isset($response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'])) {
                                     $physical_destination = $response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'];
                                 }
-                            }                            
+                            }
 
                             $names_array = array('amzFirstname', 'amzLastname');
                             $names_array_tmp = explode(' ', (string) (string) AmzPayments::getFromArray($physical_destination, 'Name'), 2);
