@@ -4034,6 +4034,11 @@ class AmzPayments extends PaymentModule
         return CURRENT_MODULE_DIR . '/amz_exception.log';
     }
     
+    public static function isVirtualCart()
+    {
+        return Context::getContext()->cart->isVirtualCart();
+    }
+    
     public function exceptionLog($e, $string = false)
     {
         $logstr = date("Y-m-d H:i:s") . ' Exception logging: ' . "\r\n";
