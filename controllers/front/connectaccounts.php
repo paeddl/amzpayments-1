@@ -91,9 +91,9 @@ class AmzpaymentsConnectaccountsModuleFrontController extends ModuleFrontControl
                 $authentication = $customer->getByEmail(trim(Tools::getValue('email')), trim(Tools::getValue('passwd')));
                 
                 if (isset($authentication->active) && ! $authentication->active) {
-                    $this->errors[] = Tools::displayError('Your account isn\'t available at this time, please contact us');
+                    $this->errors[] = $this->module->l('Your account isn\'t available at this time, please contact us');
                 } elseif (! $authentication || ! $customer->id) {
-                    $this->errors[] = Tools::displayError('Authentication failed.');
+                    $this->errors[] =  $this->module->l('Authentication failed.');
                 } else {
                     $this->context->updateCustomer($customer);
                     

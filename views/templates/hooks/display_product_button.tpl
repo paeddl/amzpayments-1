@@ -17,4 +17,4 @@
 		<div style="clear:both;"></div>
 	{/if}
 </div>
-{literal}<script> bindBuyNowButton('payWithAmazonProductDiv_{/literal}{$id_product_amz_widget}{literal}'); </script>{/literal}
+{literal}<script> setTimeout(function() { bindBuyNowButton('payWithAmazonProductDiv_{/literal}{$id_product_amz_widget}{literal}'); }, 1200); </script>{/literal}

@@ -112,6 +112,7 @@ class AmzpaymentsAddresswalletModuleFrontController extends ModuleFrontControlle
             'sellerID' => Configuration::get('AMZ_MERCHANT_ID'),
             'back' => Tools::getValue('back')
         ));
+        $this->context->smarty->assign('virtual_cart', AmzPayments::isVirtualCart());
         $this->setTemplate('module:amzpayments/views/templates/front/addresswallet.tpl');
     }
 }

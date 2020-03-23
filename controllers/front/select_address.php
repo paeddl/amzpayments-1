@@ -84,8 +84,15 @@ class AmzpaymentsSelect_AddressModuleFrontController extends ModuleFrontControll
                         }
                         $response = $this->service->GetOrderReferenceDetails($requestParameters);
                         $responsearray['getorderreference'] = $response->toArray();
-                        
-                        $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+
+                        if (isset($responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'])) {
+                            $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+                        }
+                        if (AmzPayments::isVirtualCart()) {
+                            if (isset($responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'])) {
+                                $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'];
+                            }
+                        }
 
                         $iso_code = (string) AmzPayments::getFromArray($physical_destination, 'CountryCode');
                         $city = (string) AmzPayments::getFromArray($physical_destination, 'City');

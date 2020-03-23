@@ -15,14 +15,16 @@
 <h4>{l s='Select your delivery address and your payment method from your Amazon account, to go through the checkout quickly and easily.' mod='amzpayments'}</h4>
 
 <div class="row">
-	<div class="col-xs-12 col-sm-6">
-		<div class="row">
-			<div class="col-xs-12" id="addressBookWidgetDivBs">
-			</div>
-			<div class="col-xs-12" id="addressMissings">		
+	{if !$virtual_cart}
+		<div class="col-xs-12 col-sm-6">
+			<div class="row">
+				<div class="col-xs-12" id="addressBookWidgetDivBs">
+				</div>
+				<div class="col-xs-12" id="addressMissings">
+				</div>
 			</div>
 		</div>
-	</div>
+	{/if}
 	<div class="col-xs-12 col-sm-6">
 		<div class="row">
 			<div class="col-xs-12" id="walletWidgetDivBs">
@@ -46,34 +48,45 @@
 jQuery(document).ready(function($) {
 
     var redirectURL = LOGINREDIRECTAMZ;
-	
-	new OffAmazonPayments.Widgets.AddressBook({
+
+	{/literal}{if !$virtual_cart}{literal}
+		new OffAmazonPayments.Widgets.AddressBook({
+			sellerId: '{/literal}{$sellerID|escape:'htmlall':'UTF-8'}{literal}',
+			{/literal}{if isset($amz_session) && $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session|escape:'htmlall':'UTF-8'}{literal}', {/literal}{/if}{literal}
+			onOrderReferenceCreate: function(orderReference) {
+				 amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
+			},
+			onAddressSelect: function(orderReference) {
+				updateAddressSelection(amazonOrderReferenceId);
+			},
+			{/literal}{if isset($widgetreadonly)}{literal}
+			displayMode: "Read",
+			{/literal}{/if}{literal}
+			design: {
+				designMode: 'responsive'
+			},
+			onError: function(error) {
+				console.log(error.getErrorCode());
+				console.log(error.getErrorMessage());
+			}
+		}).bind("addressBookWidgetDivBs");
+	{/literal}{/if}{literal}
+
+	walletWidget = new OffAmazonPayments.Widgets.Wallet({
 		sellerId: '{/literal}{$sellerID|escape:'htmlall':'UTF-8'}{literal}',
 		{/literal}{if isset($amz_session) && $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session|escape:'htmlall':'UTF-8'}{literal}', {/literal}{/if}{literal}
-		onOrderReferenceCreate: function(orderReference) {			
-			 amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
-		},
-		onAddressSelect: function(orderReference) {
-			updateAddressSelection(amazonOrderReferenceId);
-		},
-		{/literal}{if isset($widgetreadonly)}{literal}		
-		displayMode: "Read",
+		{/literal}{if $virtual_cart}{literal}
+			{/literal}{if !isset($amz_session) || $amz_session == ''}{literal}
+			onOrderReferenceCreate: function(orderReference) {
+				amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
+			},
+			{/literal}{/if}{literal}
 		{/literal}{/if}{literal}
 		design: {
 			designMode: 'responsive'
 		},
-		onError: function(error) {
-			console.log(error.getErrorCode());
-			console.log(error.getErrorMessage());
-		}
-	}).bind("addressBookWidgetDivBs");
-	walletWidget = new OffAmazonPayments.Widgets.Wallet({
-		sellerId: '{/literal}{$sellerID|escape:'htmlall':'UTF-8'}{literal}',
-		{/literal}{if isset($amz_session) && $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session|escape:'htmlall':'UTF-8'}{literal}', {/literal}{/if}{literal}
-		design: {
-			designMode: 'responsive'
-		},
 		onPaymentSelect: function(orderReference) {
+			updateAddressSelection(amazonOrderReferenceId);
 		},
 		onError: function(error) {
 			console.log(error.getErrorMessage());

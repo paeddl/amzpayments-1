@@ -104,6 +104,9 @@ class AmazonTransactions
             );
 
             Db::getInstance()->insert('amz_transactions', $sql_arr);
+            if ($amz_payments->capture_mode == 'after_auth') {
+                self::closeOrder($amz_payments, $service, $order_ref);
+            }
         } else {
             return self::handleError($response);
         }

@@ -64,9 +64,23 @@ class AmzpaymentsProcesspaymentModuleFrontController extends ModuleFrontControll
         if (Configuration::get('AMZ_EXTENDED_LOGGING') == '1' && Tools::getValue('amzref') != '') {
             self::$amz_payments->validateOrderLog(
                 Tools::getValue('amzref'),
-                array('cookie' => $this->context->cookie),
+                array('cookie' => $this->context->cookie, 'AuthenticationStatus' => Tools::getValue('AuthenticationStatus')),
                 $cart
             );
+        }
+
+        if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0) {
+            // additional resetting for amzref value
+            $amazonPayCart = AmazonPaymentsCarts::findByAmazonOrderReferenceId(Tools::getValue('amzref'));
+            if ($amazonPayCart) {
+                $cart = new Cart((int) $amazonPayCart->id_cart);
+                Context::getContext()->cart = $cart;
+                $customer = new Customer((int) $amazonPayCart->id_customer);
+                Context::getContext()->customer = $customer;
+                Context::getContext()->currency = new Currency((int) Context::getContext()->cart->id_currency);
+                Context::getContext()->language = new Language((int) Context::getContext()->customer->id_lang);
+                Context::getContext()->cookie->amazon_id = $amazonPayCart->amazon_order_reference_id;
+            }
         }
 
         if ($cart->id_address_invoice == 0) {
@@ -74,9 +88,14 @@ class AmzpaymentsProcesspaymentModuleFrontController extends ModuleFrontControll
         }
         
         if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active || !isset($this->context->cookie->amazon_id)) {
-            Tools::redirect('index.php?controller=order&step=1');
+            if ((int)Tools::getValue('amzstep') < 2) {
+                $additional_redirect = $this->context->link->getModuleLink('amzpayments', 'processpayment', array('amzstep' => 2, 'amzref' => Tools::getValue('amzref'), 'AuthenticationStatus' => 'Success'));
+                Tools::redirect($additional_redirect);
+            } else {
+                Tools::redirect('index.php?controller=order&step=1');
+            }
         }
-        if (Tools::getValue('AuthenticationStatus') != 'Success') {
+        if (Tools::getValue('AuthenticationStatus') != 'Success' && Tools::getValue('AuthenticationStatus') != 'Skipped') {
             if (Tools::getValue('AuthenticationStatus') == 'Failure') {
                 $this->context->cookie->amz_logout = true;
                 unset(self::$amz_payments->cookie->amz_access_token);
@@ -186,7 +205,7 @@ class AmzpaymentsProcesspaymentModuleFrontController extends ModuleFrontControll
         if (self::$amz_payments->authorization_mode == 'after_checkout' || isset($jump_to_async)) {
             $authorization_reference_id = $order_reference_id;
             $authorization_response_wrapper = AmazonTransactions::authorize(self::$amz_payments, $this->service, $authorization_reference_id, $total, $currency_code);
-            $authorization_response_wrapper['AuthorizeResult']['AuthorizationDetails']['AmazonAuthorizationId'];
+            $amazon_authorization_id = $authorization_response_wrapper['AuthorizeResult']['AuthorizationDetails']['AmazonAuthorizationId'];
         }
         
         self::$amz_payments->setAmazonReferenceIdForOrderId($order_reference_id, $this->module->currentOrder);
@@ -218,6 +237,12 @@ class AmzpaymentsProcesspaymentModuleFrontController extends ModuleFrontControll
         }
         unset($this->context->cookie->setHadErrorNowWallet);
         unset($this->context->cookie->amazon_id);
+        $this->context->cookie->amz_logout = true;
+        unset(self::$amz_payments->cookie->amz_access_token);
+        unset(self::$amz_payments->cookie->amz_access_token_set_time);
+        unsetAmazonPayCookie();
+        unset($this->context->cookie->has_set_valid_amazon_address);
+        
         Tools::redirect('index.php?controller=order-confirmation&id_cart='.(int)$this->context->cart->id.'&id_module='.(int)$this->module->id.'&id_order='.$this->module->currentOrder.'&key='.$customer->secure_key);
     }
 

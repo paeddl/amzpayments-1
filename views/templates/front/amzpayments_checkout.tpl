@@ -19,8 +19,10 @@
 	<section id="content" class="page-content">
 
 		<div class="row">
-			<div class="col-xs-12 col-sm-6" id="addressBookWidgetDivBs">
-			</div>
+			{if !$virtual_cart}
+				<div class="col-xs-12 col-sm-6" id="addressBookWidgetDivBs">
+				</div>
+			{/if}
 			<div class="col-xs-12 col-sm-6" id="walletWidgetDivBs">
 			</div>
 			<div class="col-xs-12 col-sm-6" id="addressMissings">
@@ -37,7 +39,7 @@
 		</div>
 
 		<div class="row">
-			<div class="col-xs-12 amz_cart_widgets_bs">
+			<div class="col-xs-12 amz_cart_widgets_bs" {if $virtual_cart}style="display:none;"{/if}>
 				<div id="amz_carriers" style="display: none;">
 					{include file="module:amzpayments/views/templates/front/_carriers.tpl"}
 				</div>	
@@ -108,58 +110,89 @@ var amzWidgetReadonly = false;
 jQuery(document).ready(function($) {
 	var amzAddressSelectCounter = 0;
 	
-	var redirectURL = LOGINREDIRECTAMZ;	
-	
-	new OffAmazonPayments.Widgets.AddressBook({
-		sellerId: '{/literal}{$sellerID}{literal}',
-		{/literal}{if $amz_session == ''}{literal}
-		onOrderReferenceCreate: function(orderReference) {			
-			 amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
-             $.ajax({
-                 type: 'GET',
-                 url: REDIRECTAMZ,
-                 data: 'allow_refresh=1&ajax=true&method=setsession&amazon_id=' + orderReference.getAmazonOrderReferenceId(),
-                 success: function(htmlcontent){
-                	 
-                 }
-        	});
-		},
-        {/literal}{/if}{literal}
-		{/literal}{if $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session}{literal}', {/literal}{/if}{literal}
-		onAddressSelect: function(orderReference) {
-			if (isFirstRun) {
-				setTimeout(function() { 
-					$("#carrier_area").hide();
-					updateAddressSelection(amazonOrderReferenceId); 
-					isFirstRun = false; 
+	var redirectURL = LOGINREDIRECTAMZ;
+
+	{/literal}{if !$virtual_cart}{literal}
+		new OffAmazonPayments.Widgets.AddressBook({
+			sellerId: '{/literal}{$sellerID}{literal}',
+			{/literal}{if $amz_session == ''}{literal}
+			onOrderReferenceCreate: function(orderReference) {
+				 amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
+				 $.ajax({
+					 type: 'GET',
+					 url: REDIRECTAMZ,
+					 data: 'allow_refresh=1&ajax=true&method=setsession&amazon_id=' + orderReference.getAmazonOrderReferenceId(),
+					 success: function(htmlcontent){
+
+					 }
+				});
+			},
+			{/literal}{/if}{literal}
+			{/literal}{if $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session}{literal}', {/literal}{/if}{literal}
+			onAddressSelect: function(orderReference) {
+				if (isFirstRun) {
 					setTimeout(function() {
+						$("#carrier_area").hide();
 						updateAddressSelection(amazonOrderReferenceId);
-						$("#carrier_area").fadeIn();
-					}, 1000); 
-				}, 1000);
-			} else {
-				updateAddressSelection(amazonOrderReferenceId);		
+						isFirstRun = false;
+						setTimeout(function() {
+							updateAddressSelection(amazonOrderReferenceId);
+							$("#carrier_area").fadeIn();
+						}, 1000);
+					}, 1000);
+				} else {
+					updateAddressSelection(amazonOrderReferenceId);
+				}
+			},
+			design: {
+				designMode: 'responsive'
+			},
+			{/literal}{if $trigger_payment_change}{literal}
+			displayMode: "Read",
+			{/literal}{/if}{literal}
+			onError: function(error) {
+				console.log(error.getErrorCode());
+				console.log(error.getErrorMessage());
 			}
-		},
-		design: {
-			designMode: 'responsive'
-		},
-		{/literal}{if $trigger_payment_change}{literal}
-		displayMode: "Read",		
-		{/literal}{/if}{literal}
-		onError: function(error) {
-			console.log(error.getErrorCode());
-			console.log(error.getErrorMessage());
-		}
-	}).bind("addressBookWidgetDivBs");
-	
+		}).bind("addressBookWidgetDivBs");
+	{/literal}{/if}{literal}
+
 	walletWidget = new OffAmazonPayments.Widgets.Wallet({
 		sellerId: '{/literal}{$sellerID}{literal}',
 		{/literal}{if $amz_session != ''}{literal}amazonOrderReferenceId: '{/literal}{$amz_session}{literal}', {/literal}{/if}{literal}
+		{/literal}{if $virtual_cart}{literal}
+			{/literal}{if $amz_session == ''}{literal}
+			onOrderReferenceCreate: function(orderReference) {
+				amazonOrderReferenceId = orderReference.getAmazonOrderReferenceId();
+				$.ajax({
+					type: 'GET',
+					url: REDIRECTAMZ,
+					data: 'allow_refresh=1&ajax=true&method=setsession&amazon_id=' + orderReference.getAmazonOrderReferenceId(),
+					success: function(htmlcontent){
+					}
+				});
+			},
+			{/literal}{/if}{literal}
+		{/literal}{/if}{literal}
 		design: {
 			designMode: 'responsive'
 		},
 		onPaymentSelect: function(orderReference) {
+			{/literal}{if $virtual_cart}{literal}
+				if (isFirstRun) {
+					setTimeout(function() {
+						$("#carrier_area").hide();
+						updateAddressSelection(amazonOrderReferenceId);
+						isFirstRun = false;
+						setTimeout(function() {
+							updateAddressSelection(amazonOrderReferenceId);
+							$("#carrier_area").fadeIn();
+						}, 1000);
+					}, 1000);
+				} else {
+					updateAddressSelection(amazonOrderReferenceId);
+				}
+			{/literal}{/if}{literal}
 		},
 		onError: function(error) {
 			console.log(error.getErrorMessage());

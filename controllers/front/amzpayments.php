@@ -92,7 +92,7 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
         $this->context->smarty->assign('currency', $this->context->currency);
         
         if ($this->nbProducts) {
-            $this->context->smarty->assign('virtual_cart', $this->context->cart->isVirtualCart());
+            $this->context->smarty->assign('virtual_cart', AmzPayments::isVirtualCart());
         }
         unset($this->context->cookie->setHadErrorNowWallet);
                 
@@ -101,7 +101,16 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                 if (Tools::isSubmit('method')) {
                     switch (Tools::getValue('method')) {
                         case 'setsession':
-                            $this->context->cookie->amazon_id = Tools::getValue('amazon_id');
+                            $write = '';
+                            if (Tools::getValue('frombutton') == 'true') {
+                                if (!AmzPayments::isVirtualCart()) {
+                                    $write = Tools::getValue('amazon_id');
+                                    $this->context->cookie->amazon_id = Tools::getValue('amazon_id');
+                                }
+                            } else {
+                                $write = Tools::getValue('amazon_id');
+                                $this->context->cookie->amazon_id = Tools::getValue('amazon_id');
+                            }
 
                             if (getAmazonPayCookie()) {
                                 $access_token = AmzPayments::prepareCookieValueForPrestaShopUse(getAmazonPayCookie());
@@ -144,6 +153,7 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                     }
                                 }
                             }
+                            echo $write;
                             
                             exit();
                         
@@ -231,8 +241,14 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                             if (!isset($response['GetOrderReferenceDetailsResult'])) {
                                 self::$amz_payments->exceptionLog($response);
                             }
-                                                        
-                            $physical_destination = $response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+                            if (isset($response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'])) {
+                                $physical_destination = $response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+                            }
+                            if (AmzPayments::isVirtualCart()) {
+                                if (isset($response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'])) {
+                                    $physical_destination = $response['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'];
+                                }
+                            }                            
 
                             $names_array = array('amzFirstname', 'amzLastname');
                             $names_array_tmp = explode(' ', (string) (string) AmzPayments::getFromArray($physical_destination, 'Name'), 2);
@@ -574,7 +590,14 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                     }
                                 }
 
-                                $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+                                if (isset($responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'])) {
+                                    $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['Destination']['PhysicalDestination'];
+                                }
+                                if (AmzPayments::isVirtualCart()) {
+                                    if (isset($responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'])) {
+                                        $physical_destination = $responsearray['getorderreference']['GetOrderReferenceDetailsResult']['OrderReferenceDetails']['BillingAddress']['PhysicalAddress'];
+                                    }
+                                }
 
                                 $iso_code = (string) AmzPayments::getFromArray($physical_destination, 'CountryCode');
                                 $city = (string) AmzPayments::getFromArray($physical_destination, 'City');
@@ -791,6 +814,18 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                         $address_delivery,
                                         $address_invoice
                                     );
+                                }
+
+                                try {
+                                    $this->context->cart->getProducts();
+                                    $amazonPayCart = new AmazonPaymentsCarts();
+                                    $amazonPayCart->id_customer = $customer->id;
+                                    $amazonPayCart->id_cart = $this->context->cart->id;
+                                    $amazonPayCart->amazon_order_reference_id = Tools::getValue('amazonOrderReferenceId');
+                                    $amazonPayCart->cart = serialize($this->context->cart);
+                                    $amazonPayCart->save();
+                                } catch (Exception $e) {
+                                    $this->exceptionLog($e);
                                 }
 
                                 die(Tools::jsonEncode(array(

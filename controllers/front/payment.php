@@ -98,7 +98,8 @@ class AmzpaymentsPaymentModuleFrontController extends ModuleFrontController
             $requestParameters['seller_order_id'] = self::$amz_payments->createUniqueOrderId((int) $this->context->cart->id);
             $requestParameters['store_name'] = Configuration::get('PS_SHOP_NAME');
             $requestParameters['custom_information'] = 'Prestashop,Patworx,' . self::$amz_payments->version;
-            $requestParameters['success_url'] = $this->context->link->getModuleLink('amzpayments', 'processpayment');
+            $process_params = array('amzref' => $order_reference_id);
+            $requestParameters['success_url'] = $this->context->link->getModuleLink('amzpayments', 'processpayment', $process_params);
             $requestParameters['failure_url'] = $this->context->link->getModuleLink('amzpayments', 'addresswallet');
             
             $response = $service->SetOrderReferenceDetails($requestParameters);
@@ -184,6 +185,18 @@ class AmzpaymentsPaymentModuleFrontController extends ModuleFrontController
                 );
                 Db::getInstance()->insert('amz_transactions', $sql_arr);
             }
+        }
+
+        try {
+            $this->context->cart->getProducts();
+            $amazonPayCart = new AmazonPaymentsCarts();
+            $amazonPayCart->id_customer = $customer->id;
+            $amazonPayCart->id_cart = $this->context->cart->id;
+            $amazonPayCart->amazon_order_reference_id = $order_reference_id;
+            $amazonPayCart->cart = serialize($this->context->cart);
+            $amazonPayCart->save();
+        } catch (Exception $e) {
+            $this->exceptionLog($e);
         }
 
         $this->context->smarty->assign('sellerId', self::$amz_payments->merchant_id);

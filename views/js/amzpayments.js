@@ -223,9 +223,9 @@ function bindCartButton(div_id) {
 		            jQuery.ajax({
 		                    type: 'POST',
 		                    url: REDIRECTAMZ,
-		                    data: 'ajax=true&method=setsession&amazon_id=' + amazonOrderReferenceId + acctk,
-		                    success: function(htmlcontent){
-		                    	window.location = REDIRECTAMZ + amazonOrderReferenceId + addToCheckoutInPopup;
+		                    data: 'ajax=true&method=setsession&frombutton=true&amazon_id=' + amazonOrderReferenceId + acctk,
+		                    success: function(data){
+		                    	window.location = REDIRECTAMZ + data + addToCheckoutInPopup;
 		                    }
 		            });
 	            }

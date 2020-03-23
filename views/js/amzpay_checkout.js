@@ -143,7 +143,8 @@ function placeAmazonPayOrder(confirmationFlow, connectRequest)
                 alert("TECHNICAL ERROR: unable to save adresses \n\nDetails:\nError thrown: " + XMLHttpRequest + "\n" + 'Text status: ' + textStatus);
             $('#amzOverlay, #opc_account-overlay, #opc_delivery_methods-overlay, #opc_payment_methods-overlay').fadeOut('slow');
             orderExecutionIsRunning = false;
-        }
+        },
+        timeout: 3000
     });
 }
 
