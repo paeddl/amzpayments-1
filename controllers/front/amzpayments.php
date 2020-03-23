@@ -724,12 +724,13 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                     $confirm_order_reference_request = new OffAmazonPaymentsService_Model_ConfirmOrderReferenceRequest();
                                     $confirm_order_reference_request->setAmazonOrderReferenceId(Tools::getValue('amazonOrderReferenceId'));
                                     $confirm_order_reference_request->setSellerId(self::$amz_payments->merchant_id);
-                                                                        
+
+                                    $process_params = array('amzref' => Tools::getValue('amazonOrderReferenceId'));
+
                                     if (Tools::getValue('connect_amz_account') == '1') {
-                                        $confirm_order_reference_request->setSuccessUrl($this->context->link->getModuleLink('amzpayments', 'processpayment', array('connect' => '1', 'amzref' => Tools::getValue('amazonOrderReferenceId'))));
-                                    } else {
-                                        $confirm_order_reference_request->setSuccessUrl($this->context->link->getModuleLink('amzpayments', 'processpayment', array('amzref' => Tools::getValue('amazonOrderReferenceId'))));
+                                        $process_params['connect'] = 1;
                                     }
+                                    $confirm_order_reference_request->setSuccessUrl($this->context->link->getModuleLink('amzpayments', 'processpayment', $process_params));
                                     
                                     $confirm_order_reference_request->setFailureUrl($this->context->link->getModuleLink('amzpayments', 'amzpayments'));
                                     $confirm_order_reference_request->setAmount($total);
@@ -1021,6 +1022,18 @@ class AmzpaymentsAmzpaymentsModuleFrontController extends ModuleFrontController
                                         $address_delivery,
                                         $address_invoice
                                     );
+                                }
+
+                                try {
+                                    $this->context->cart->getProducts();
+                                    $amazonPayCart = new AmazonPaymentsCarts();
+                                    $amazonPayCart->id_customer = $customer->id;
+                                    $amazonPayCart->id_cart = $this->context->cart->id;
+                                    $amazonPayCart->amazon_order_reference_id = Tools::getValue('amazonOrderReferenceId');
+                                    $amazonPayCart->cart = serialize($this->context->cart);
+                                    $amazonPayCart->save();
+                                } catch (Exception $e) {
+                                    $this->exceptionLog($e);
                                 }
                                 
                                 die(Tools::jsonEncode(array(

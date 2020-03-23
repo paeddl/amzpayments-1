@@ -36,6 +36,7 @@ require_once(CURRENT_MODULE_DIR . '/classes/AmazonPostalCodesHelper.php');
 require_once(CURRENT_MODULE_DIR . '/classes/AmazonPaymentsHelperForm.php');
 require_once(CURRENT_MODULE_DIR . '/classes/AmazonPaymentsLogHelper.php');
 require_once(CURRENT_MODULE_DIR . '/classes/AmazonPaymentsTroubleshooter.php');
+require_once(CURRENT_MODULE_DIR . '/classes/AmazonPaymentsCarts.php');
 require_once(CURRENT_MODULE_DIR . '/vendor/amazonpaycookie.php');
 
 class AmzPayments extends PaymentModule
@@ -218,7 +219,7 @@ class AmzPayments extends PaymentModule
     {
         $this->name = 'amzpayments';
         $this->tab = 'payments_gateways';
-        $this->version = '2.3.2';
+        $this->version = '2.3.3';
         $this->author = 'patworx multimedia GmbH';
         $this->need_instance = 1;
         
@@ -373,6 +374,17 @@ class AmzPayments extends PaymentModule
                 `id` int(11) NOT NULL AUTO_INCREMENT,
                 `id_customer` int(11) NOT NULL,
                 `amazon_customer_id` varchar(255) NOT NULL,
+                PRIMARY KEY (`id`)
+        ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
+                ');
+
+        Db::getInstance()->execute('
+                CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'amz_carts` (
+                `id` int(11) NOT NULL AUTO_INCREMENT,
+                `id_customer` int(11) NOT NULL,
+                `id_cart` int(11) NOT NULL,
+                `amazon_order_reference_id` varchar(255) NOT NULL,
+                `cart` TEXT NOT NULL,
                 PRIMARY KEY (`id`)
         ) ENGINE=MyISAM DEFAULT CHARSET=latin1 AUTO_INCREMENT=1 ;
                 ');
@@ -3027,7 +3039,7 @@ class AmzPayments extends PaymentModule
     
     public function createUniqueOrderId($cart_id)
     {
-        return 'AP' . $cart_id . '-' . Tools::substr(Tools::getToken(false), 0, 8);
+        return 'AP' . $cart_id . '-' . Tools::passwdGen(8);
     }
     
     public function getAdminSkeleton($orders_id, $direct_include = false)
@@ -4067,6 +4079,7 @@ class AmzPayments extends PaymentModule
             $logstr.= print_r($address_invoice, true);
             $logstr.= "\r\n\r\n";
         }
+        $logstr.= "[Front-Office Cookie Setting Lifetime]: " . Configuration::get('PS_COOKIE_LIFETIME_FO');
         $logstr.= "\r\n\r\n";
         file_put_contents($filename, $logstr, 0);
     }

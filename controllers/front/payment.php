@@ -163,7 +163,8 @@ class AmzpaymentsPaymentModuleFrontController extends ModuleFrontController
             $confirm_order_reference_request = new OffAmazonPaymentsService_Model_ConfirmOrderReferenceRequest();
             $confirm_order_reference_request->setAmazonOrderReferenceId($order_reference_id);
             $confirm_order_reference_request->setSellerId(self::$amz_payments->merchant_id);
-            $confirm_order_reference_request->setSuccessUrl($this->context->link->getModuleLink('amzpayments', 'processpayment'));
+            $process_params = array('amzref' => $order_reference_id);
+            $confirm_order_reference_request->setSuccessUrl($this->context->link->getModuleLink('amzpayments', 'processpayment', $process_params));
             $confirm_order_reference_request->setFailureUrl($this->context->link->getModuleLink('amzpayments', 'addresswallet'));
             $confirm_order_reference_request->setAmount($total);
             $confirm_order_reference_request->setCurrencyCode($currency_code);
@@ -217,7 +218,19 @@ class AmzpaymentsPaymentModuleFrontController extends ModuleFrontController
             }
             $reference_details_result_wrapper = $this->service->getOrderReferenceDetails($get_order_reference_details_request);
         }
-        
+
+        try {
+            $this->context->cart->getProducts();
+            $amazonPayCart = new AmazonPaymentsCarts();
+            $amazonPayCart->id_customer = $customer->id;
+            $amazonPayCart->id_cart = $this->context->cart->id;
+            $amazonPayCart->amazon_order_reference_id = $order_reference_id;
+            $amazonPayCart->cart = serialize($this->context->cart);
+            $amazonPayCart->save();
+        } catch (Exception $e) {
+            $this->exceptionLog($e);
+        }
+
         $this->context->smarty->assign('sellerId', self::$amz_payments->merchant_id);
         $this->context->smarty->assign('orderReferenceId', $order_reference_id);
         $this->context->smarty->assign('isNoPSD2', self::$amz_payments->isNoPSD2Region());

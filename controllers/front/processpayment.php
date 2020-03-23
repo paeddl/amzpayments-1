@@ -62,18 +62,31 @@ class AmzpaymentsProcesspaymentModuleFrontController extends ModuleFrontControll
         if (Configuration::get('AMZ_EXTENDED_LOGGING') == '1' && Tools::getValue('amzref') != '') {
             self::$amz_payments->validateOrderLog(
                 Tools::getValue('amzref'),
-                array('cookie' => $this->context->cookie),
+                array('cookie' => $this->context->cookie, 'AuthenticationStatus' => Tools::getValue('AuthenticationStatus')),
                 $cart
             );
+        }
+
+        if ($cart->id_customer == 0 || (!AmzPayments::isVirtualCart() && $cart->id_address_delivery == 0) || $cart->id_address_invoice == 0) {
+            // additional resetting for amzref value
+            $amazonPayCart = AmazonPaymentsCarts::findByAmazonOrderReferenceId(Tools::getValue('amzref'));
+            if ($amazonPayCart) {
+                Context::getContext()->customer = new Customer((int) $amazonPayCart->id_customer);
+                Context::getContext()->cart = new Cart((int) $amazonPayCart->id_cart);
+                Context::getContext()->currency = new Currency((int) Context::getContext()->cart->id_currency);
+                Context::getContext()->language = new Language((int) Context::getContext()->customer->id_lang);
+                Context::getContext()->cookie->amazon_id = $amazonPayCart->amazon_order_reference_id;
+                $cart = Context::getContext()->cart;
+            }
         }
         
         if ($cart->id_address_invoice == 0) {
             $cart->id_address_invoice = $cart->id_address_delivery;
         }
-        if ($cart->id_customer == 0 || $cart->id_address_delivery == 0 || $cart->id_address_invoice == 0 || !$this->module->active || !isset($this->context->cookie->amazon_id)) {
+        if ($cart->id_customer == 0 || (!AmzPayments::isVirtualCart() && $cart->id_address_delivery == 0) || $cart->id_address_invoice == 0 || !$this->module->active || !isset($this->context->cookie->amazon_id)) {
             Tools::redirect('index.php?controller=order&step=1');
         }
-        if (Tools::getValue('AuthenticationStatus') != 'Success') {
+        if (Tools::getValue('AuthenticationStatus') != 'Success' && Tools::getValue('AuthenticationStatus') != 'Skipped') {
             if (Tools::getValue('AuthenticationStatus') == 'Failure') {
                 $this->context->cookie->amz_logout = true;
                 unset($this->context->cookie->amz_access_token);
