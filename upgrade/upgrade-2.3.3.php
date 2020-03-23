@@ -37,4 +37,3 @@ function upgrade_module_2_3_3($module)
                 ');
     return true;
 }
-
