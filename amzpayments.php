@@ -210,7 +210,7 @@ class AmzPayments extends PaymentModule
     {
         $this->name = 'amzpayments';
         $this->tab = 'payments_gateways';
-        $this->version = '3.3.1';
+        $this->version = '3.3.2';
         $this->author = 'patworx multimedia GmbH';
         $this->need_instance = 1;
         
@@ -591,6 +591,19 @@ class AmzPayments extends PaymentModule
     private function _postProcess()
     {
         if (Tools::isSubmit('submitAmzpaymentsModule') || Tools::isSubmit('submitAmzpaymentsModuleConnect')) {
+            $key_uploaded = false;
+            if (isset($_FILES['AMAZONPAY_PRIVATE_KEY_UPLOAD']['name']) &&
+                !empty($_FILES['AMAZONPAY_PRIVATE_KEY_UPLOAD']['name']) &&
+                !empty($_FILES['AMAZONPAY_PRIVATE_KEY_UPLOAD']['tmp_name'])) {
+                $keyContent = Tools::file_get_contents(
+                    $_FILES['AMAZONPAY_PRIVATE_KEY_UPLOAD']['tmp_name']
+                );
+                if (trim($keyContent) != '') {
+                    $key_uploaded = true;
+                    Configuration::updateValue('AMZ_PRIVATE_KEY', trim($keyContent));
+                }
+            }
+
             foreach (self::$config_array as $f => $conf_key) {
                 if ($conf_key == 'SHIPPINGS_NOT_ALLOWED') {
                     $carriers_set = array();
@@ -608,7 +621,7 @@ class AmzPayments extends PaymentModule
                     }
                 } elseif ($conf_key == 'AMZ_CARRIERS_MAPPING') {
                     Configuration::updateValue($conf_key, trim(Tools::jsonEncode(Tools::getValue($conf_key))));
-                } elseif ($conf_key == 'AMZ_PRIVATE_KEY' && trim(Tools::getValue($conf_key)) == '[Secret key]') {
+                } elseif ($conf_key == 'AMZ_PRIVATE_KEY' && ($key_uploaded || trim(Tools::getValue($conf_key)) == '[Secret key]')) {
                     // do nothing.
                 } else {
                     Configuration::updateValue($conf_key, trim(Tools::getValue($conf_key)));
@@ -1292,6 +1305,12 @@ class AmzPayments extends PaymentModule
                         'prefix' => '<i class="icon icon-tag"></i>',
                         'name' => 'AMZ_PRIVATE_KEY',
                         'label' => $this->l('Private Key')
+                    ),
+                    array(
+                        'type' => 'file',
+                        'name' => 'AMAZONPAY_PRIVATE_KEY_UPLOAD',
+                        'label' => $this->l('Private Key upload'),
+                        'desc' => $this->l('You can upload the private key you received from Amazon Pay here'),
                     ),
                     array(
                         'col' => 3,

@@ -57,7 +57,9 @@ $(document).ready(function(){
 		}
 
 		$("#AMZ_ALEXA_DELIVERY_NOTIFICATIONS_on").closest('.col-lg-9').append($('<p class="help-block">' + $("#alexa_hint").html() + '</p>'));
-        $("#AMZ_PUBLIC_KEY_ID").closest('.col-lg-3').append($('<p class="help-block">' + $("#public_key_mail_init_span").html() + '</p>'));
+        // $("#AMZ_PUBLIC_KEY_ID").closest('.col-lg-3').append($('<p class="help-block">' + $("#public_key_mail_init_span").html() + '</p>'));
+
+		$("#alex_how_to").detach().prependTo('#amzalexa').show();
 
 		$("#public_key_mail_init, #public_key_mail_init_2").on('click', function() {
             window.open('mailto:amazon-pay-delivery-notifications@amazon.com?subject=' + $("#alexa_mail_subject").html() + " " + $("#AMZ_MERCHANT_ID").val() + '&body=' + $("#alexa_mail_body").html() + " " + $("#AMZ_MERCHANT_ID").val() + "%0D%0A%0D%0A" + "Public key: " + "%0D%0A%0D%0A" +  $("#alexa_public_key").html());
