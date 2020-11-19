@@ -2,6 +2,10 @@
 
 global $_MODULE;
 $_MODULE = array();
+$_MODULE['<{amzpayments}prestashop>configuration_2e7f0dbc405af1fe707de1d90b598737'] = 'Para autenticarse con Amazon Pay, genere sus claves siguiendo la guía:';
+$_MODULE['<{amzpayments}prestashop>configuration_5648084d0c3c17e4ad6667cbf0169322'] = 'Luego, cargue o pegue su clave privada en el formulario de configuración debajo.';
+$_MODULE['<{amzpayments}prestashop>amzpayments_29eebfc4c1990554040aa00b462302a9'] = 'Private subir clave';
+$_MODULE['<{amzpayments}prestashop>amzpayments_a36c861e44dbceb1f7daf4e9a6b7304f'] = 'Puede cargar la clave privada que recibió de Amazon Pay aquí';
 $_MODULE['<{amzpayments}prestashop>ajax_81d1ad142418eddcae2bbc31b0d4d8ad'] = 'Pedido completado';
 $_MODULE['<{amzpayments}prestashop>ajax_f3861c4c3a4594ea61e265c2cb9b5c48'] = 'Proceso de pago cancelado';
 $_MODULE['<{amzpayments}prestashop>ajax_71a85ee870436f9064ac3528a4c86549'] = 'Actualización completada';

@@ -537,6 +537,16 @@
 		</div>
 		<div id="amzalexa" class="tab-pane">
 
+			<div class="alert alert-info" id="alex_how_to">
+				<p>
+					{l s='To authenticate for Amazon Pay, please generate your key-pair following the guide:' mod='amzpayments'}<br>
+					<a href="https://developer.amazon.com/de/docs/amazon-pay-automatic/delivery-notifications.html#keys" target="_blank">https://developer.amazon.com/de/docs/amazon-pay-automatic/delivery-notifications.html#keys</a>
+				</p>
+				<p>
+					{l s='Afterwards, please upload or paste your private key in the configuration form underneath.' mod='amzpayments'}
+				</p>
+			</div>
+
 			<span id="alexa_hint" style="display:none;">{$alexa_hint}</span> {* no escaping, comes from already checked capture *}
 			<span id="public_key_mail_init_span" style="display:none;">{$public_key_mail}</span> {* no escaping, comes from already checked capture *}
 			<span id="alexa_mail_subject" style="display:none">[{$alexa_region|escape:'htmlall':'UTF-8'}] {l s='Request for Amazon Pay Public Key ID for' mod='amzpayments'}</span>
@@ -548,10 +558,6 @@
 					<strong><i class="fa fa-undo" aria-hidden="true"></i>&nbsp;{l s='Download public key' mod='amzpayments'}</strong>
 				</button>
 			{/if}
-
-			<button id="create_keypair_link" class="btn btn-warning btn-sm" style="margin:10px 10px 10px 0px;" type="button" aria-expanded="false" aria-controls="collapseExample" onclick="if (confirm('{l s='Do you confirm?' mod='amzpayments'}')) { location.href='{$create_keypair_link|escape:'htmlall':'UTF-8'}'; }">
-				<strong><i class="fa fa-undo" aria-hidden="true"></i>&nbsp;{l s='Generate key pair' mod='amzpayments'}</strong>
-			</button>
 
 			<div id="carriers_mapping_alexa">
 				<div class="form-group">
